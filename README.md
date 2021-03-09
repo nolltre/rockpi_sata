@@ -82,7 +82,7 @@ Event: time 1615293751.844339, -------------- SYN_REPORT ------------
 ```
 
 ### SSD1306 as framebuffer console
-There is support to use the SSD1306 fitted to this device as a framebuffer console. To do that, you will have to make your own overlay as the current one doesn't include support for the reset functionality (see the [Kernel documentation](https://www.kernel.org/doc/Documentation/devicetree/bindings/display/ssd1307fb.txt) and [the current Raspberry Pi overlay](https://github.com/raspberrypi/linux/blob/c9226080e513181ffb3909a905e9c23b8a6e8f62/arch/arm/boot/dts/overlays/ssd1306-overlay.dts)), thus we need to add that:  
+There is support to use the SSD1306 fitted to this device as a framebuffer console. To do that, you will have to make your own overlay as the current one doesn't include support for the reset functionality (see the [Kernel documentation](https://www.kernel.org/doc/Documentation/devicetree/bindings/display/ssd1307fb.txt) and [the current Raspberry Pi overlay](https://github.com/raspberrypi/linux/blob/rpi-5.10.y/arch/arm/boot/dts/overlays/ssd1306-overlay.dts)), thus we need to add that:  
 ```
 ....
 	target = <&i2c1>;
@@ -102,9 +102,14 @@ And adding this to the end of the command line arguments adds the framebuffer ca
 ```
 fbcon=font:MINI4x6 fbcon=rotate:2 fbcon=logo-count:0
 ```
-Do note that I have the enclosure towards me (I can see the disk LEDs), so you might have to modify the rotation of the framebuffer.
+Do note that I have the enclosure towards me (I can see the disk LEDs), so you might have to modify the rotation of the framebuffer. I also clear the screen and disable the cursor after the boot is complete:  
+```bash
+echo 0 > /sys/class/graphics/fbcon/cursor_blink
+tput civis > /dev/tty1
+clear > /dev/tty1
+```
 
-### Adding framebuffer capabilities
+Ideally, I guess that the framebuffer should be remapped after the boot has been successful with something like `con2fbmap 8 1`(i.e. move it to `/dev/tty8`) or unbound. It is very easy to print text if you can just echo to a tty, not so much if you need to print to the framebuffer (unless you want to display images).
 
 ### Starting the SATA interfaces at boot
 In order to enable both the SATA interfaces at boot time, the following is added to `/boot/config.txt`:  

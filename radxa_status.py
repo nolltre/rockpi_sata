@@ -8,7 +8,8 @@
 
 from datetime import datetime, timedelta
 
-# Requires: humanize
+# Requires: netifaces, humanize
+import netifaces
 import humanize
 
 deg = u'\xb0'
@@ -40,9 +41,24 @@ def uptime() -> str:
         return "Could not get uptime"
 
 
+def get_ips(interfaces=[], ipv6=False) -> str:
+    """ Get the IP address associated with each listed interface """
+    phys_interfaces = netifaces.interfaces()
+
+    ret_str = ""
+
+    # Only loop through interfaces that actually exists
+    for intf in [i for i in phys_interfaces if i in interfaces]:
+        addresses = netifaces.ifaddresses(intf)
+        ret_str += f'{intf}: {addresses[netifaces.AF_INET][0]["addr"]}\n'
+
+    return ret_str
+
+
 if __name__ == '__main__':
     print(f"CPU temperature: {cpu_temp()}")
     print(f"CPU temperature: {cpu_temp(True)}")
     print(uptime())
+    print(get_ips(interfaces=["lo", "eth0"]))
 
 # :vim: set wrap:

@@ -35,7 +35,7 @@ The button can be read on GPIO 17.
 
 The fan in the top board is connected to PWM1 on GPIO 13.
 
-How do we address this? Well, by using the `gpio` option in `/boot/config.txt`, using the `gpio-key` overlay and writing our own overlay for the display of course!
+How do we address this? Well, by using the `gpio` option in `/boot/config.txt`, using the `gpio-key` overlay and writing our own overlay for the display and fan of course!
 
 To reiterate, these are the GPIOs I will address first of all:  
 | GPIO | Function      |
@@ -53,7 +53,10 @@ The fan can be enabled by the `pwm` overlay in `/boot/config.txt`:
 dtoverlay=pwm,pin=13,func=4
 ```
 
-In userspace you'll then have to export the PWM channel, set period, duty cycle and enable the output.
+I also add a custom overlay (`pwm-fan`) which you can find in the overlays folder.
+Do note that you will have to build the kernel module too, which I am doing by copying the `pwm-fan-1.0` directory to `/usr/src` and adding it to dkms with `dkms install pwm-fan/1.0` which will install the kernel module for you automatically with every kernel update (you'll need the `linux-headers` package too). The pwm-fan.c is copied from `https://github.com/raspberrypi/linux/blob/rpi-5.10.y/drivers/hwmon/pwm-fan.c`  
+This should really be made into a script that does this automatically in a package.
+
 
 ### Button
 In order to use the button, I'd like it to show up as a normal key which I can read with a program (perhaps Python) via evdev.  
@@ -98,29 +101,28 @@ That file is built via the `build_dtbo.sh` script and put in the `/boot/overlays
 dtoverlay=ssd1306-overlay,width=128,height=32,inverted,sequential
 ```
 
-And adding this to the end of the command line arguments adds the framebuffer capabilites which will give a bunch of boot time messages on the display (`/boot/cmdline.txt`):  
+And adding this to the end of the command line arguments adds the framebuffer capabilites which will give a bunch of boot time messages on the display (`/boot/cmdline.txt`) plus it disables the cursor:  
 ```
-fbcon=font:MINI4x6 fbcon=rotate:2 fbcon=logo-count:0
+fbcon=font:MINI4x6 fbcon=rotate:2 fbcon=logo-count:0 vt.global_cursor_default=0
 ```
-Do note that I have the enclosure towards me (I can see the disk LEDs), so you might have to modify the rotation of the framebuffer. I also clear the screen and disable the cursor after the boot is complete:  
+Do note that I have the enclosure towards me (I can see the disk LEDs), so you might have to modify the rotation of the framebuffer. And I run it headless so there are no other framebuffers competing
+Running this in the /etc/rc.local will change the virtual terminal to no. 10 when booted (effectively clearing the screen)
 ```bash
-echo 0 > /sys/class/graphics/fbcon/cursor_blink
-tput civis > /dev/tty1
-clear > /dev/tty1
+chvt 10
 ```
 
-Ideally, I guess that the framebuffer should be remapped after the boot has been successful with something like `con2fbmap 8 1`(i.e. move it to `/dev/tty8`) or unbound. It is very easy to print text if you can just echo to a tty, not so much if you need to print to the framebuffer (unless you want to display images).
+It is very easy to print text if you can just echo to a tty, not so much if you need to print to the framebuffer (unless you want to display images), so the plan is to implement something printing on the different tty's (like disk status on one, CPU stuff on another etc)
 
 ### Starting the SATA interfaces at boot
 In order to enable both the SATA interfaces at boot time, the following is added to `/boot/config.txt`:  
 ```
-# For the Radxa Quad SATA Hat (25 = SATA1/2 26 = SATA3/4)
+# For the Radxa Quad SATA Hat (26 = SATA1/2 25 = SATA3/4)
 gpio=26=op,dh
 gpio=25=op,dh
 ```
 
 That sets the GPIOs as outputs and drives them high.
-Don't ask me why the 26 comes before the 25, if I didn't do it this way, the disks would come up in the wrong order (disk 3 as sda, disk 1 as sdc etc.)
+Don't ask me why the 26 comes before the 25, if I didn't do it this way, the disks would come up in the wrong order (disk 3 as sda, disk 1 as sdc etc.) so it might be wrong in the documentation/wiki.
 
 # What doesn't work?
 Well, this is just the early stages. There are no scripts to do the functionality

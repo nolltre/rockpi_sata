@@ -1,0 +1,96 @@
+// Overlay for SSD1306 128x64 and 128x32 OLED displays
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2718";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			fan0: pwm-fan {
+				compatible = "pwm-fan";
+				cooling-min-state = <0>;
+				cooling-max-state = <4>;
+				#cooling-cells = <2>;
+                // Rockpi standard 25% 50% 75% 100%
+                // Percent of 0-255
+				cooling-levels = <0 64 128 191 255>;
+                // PWM signal connected to PWM1
+				pwms = <&pwm 1 25000 0>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&cpu_thermal>;
+		__overlay__ {
+			trips {
+				trip0: trip0 {
+					temperature = <55000>;
+					hysteresis = <2000>;
+					type = "active";
+				};
+				trip1: trip1 {
+					temperature = <60000>;
+					hysteresis = <2000>;
+					type = "active";
+				};
+				trip2: trip2 {
+					temperature = <65000>;
+					hysteresis = <2000>;
+					type = "active";
+				};
+				trip3: trip3 {
+					temperature = <70000>;
+					hysteresis = <2000>;
+					type = "active";
+				};
+			};
+			cooling-maps {
+				map0 {
+					trip = <&trip0>;
+					cooling-device = <&fan0 0 1>;
+				};
+				map1 {
+					trip = <&trip1>;
+					cooling-device = <&fan0 1 2>;
+				};
+				map2 {
+					trip = <&trip2>;
+					cooling-device = <&fan0 2 3>;
+				};
+				map3 {
+					trip = <&trip3>;
+					cooling-device = <&fan0 3 4>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target-path = "/__overrides__";
+		__overlay__ {
+			rockpi_fan_temp0 =		<&trip0>,"temperature:0";
+			rockpi_fan_temp0_hyst =	<&trip0>,"hysteresis:0";
+			rockpi_fan_temp1 =		<&trip1>,"temperature:0";
+			rockpi_fan_temp1_hyst =	<&trip1>,"hysteresis:0";
+			rockpi_fan_temp2 =		<&trip2>,"temperature:0";
+			rockpi_fan_temp2_hyst =	<&trip2>,"hysteresis:0";
+			rockpi_fan_temp3 =		<&trip3>,"temperature:0";
+			rockpi_fan_temp3_hyst =	<&trip3>,"hysteresis:0";
+		};
+	};
+
+	__overrides__ {
+		rockpi_fan_temp0 =		<&trip0>,"temperature:0";
+		rockpi_fan_temp0_hyst =	<&trip0>,"hysteresis:0";
+		rockpi_fan_temp1 =		<&trip1>,"temperature:0";
+		rockpi_fan_temp1_hyst =	<&trip1>,"hysteresis:0";
+		rockpi_fan_temp2 =		<&trip2>,"temperature:0";
+		rockpi_fan_temp2_hyst =	<&trip2>,"hysteresis:0";
+		rockpi_fan_temp3 =		<&trip3>,"temperature:0";
+		rockpi_fan_temp3_hyst =	<&trip3>,"hysteresis:0";
+	};
+};

@@ -75,27 +75,14 @@ def disk_free(mountpoints=[]) -> str:
 
 def fan_speed() -> str:
     """ Get the duty cycle of the cooling fan (in the top board) """
-    with open("/sys/class/pwm/pwmchip0/pwm1/duty_cycle") as sys_duty_cycle:
-        duty_cycle = int(sys_duty_cycle.read()) / 1e5
+    # TODO: Find the hwmon entry that the pwmfan belongs to
+    try:
+        with open("/sys/class/hwmon/hwmon2/pwm1") as sys_duty_cycle:
+            duty_cycle = int(int(sys_duty_cycle.read()) / 255 * 100)
 
-    if duty_cycle:
-        return f'Cooling fan at {duty_cycle}%'
-    else:
+            return f'Cooling fan at {duty_cycle}%'
+    except Exception:
         return f'Cannot read duty cycle of fan'
-
-
-def set_fan_speed(dutycycles) -> bool:
-    with open('/sys/class/thermal/thermal_zone0/temp') as temp:
-        temp_reading = int(temp.read()) / 1000.0
-
-    dutycycle_val = min(dutycycles.values(), key=lambda x: abs(x-temp_reading))
-    for k, v in dutycycles.items():
-        if v == dutycycle_val:
-            perc = int(k)
-
-    print(f"Duty cycle should be {perc}%")
-    with open("/sys/class/pwm/pwmchip0/pwm1/duty_cycle", "w") as sys_duty_cycle:
-        sys_duty_cycle.write(str(int(perc * 1e5)))
 
 
 def get_config() -> dict:
@@ -111,6 +98,5 @@ if __name__ == '__main__':
     print(get_ips(interfaces=js_config["interfaces"]))
     print(disk_free(js_config["mountpoints"]))
     print(fan_speed())
-    set_fan_speed(js_config["fan"])
 
 # vim: set wrap formatoptions+=t tw=80 noai ts=4 sw=4:

@@ -1,0 +1,7 @@
+[Service]
+Type=simple
+ExecStart=/opt/rockpi-sata/rockpi-sata-service.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+{
+    "f-temp": true,
+    "key": {
+        "click": "slider",
+        "twice": "select",
+        "press": "reboot"
+    },
+    "time": {
+        "twice": 700,
+        "press": 3000
+    },
+    "slider": {
+        "auto": "true",
+        "time": 10
+    },
+    "mountpoints": [
+        "/",
+        "/export/All1TB"
+    ],
+    "interfaces": [
+        "eth0",
+        "mullvad-se9"
+    ]
+}

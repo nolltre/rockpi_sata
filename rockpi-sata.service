@@ -1,3 +1,6 @@
+[Unit]
+Description=Rockpi SATA service for reading the button and changing screens on the top board
+
 [Service]
 Type=simple
 ExecStart=/opt/rockpi-sata/rockpi-sata-service.sh

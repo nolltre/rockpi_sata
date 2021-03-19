@@ -1,5 +1,5 @@
 {
-    "f-temp": true,
+    "f-temp": false,
     "key": {
         "click": "slider",
         "twice": "select",

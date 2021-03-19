@@ -9,6 +9,7 @@
 import argparse
 import json
 import shutil
+import sys
 from datetime import datetime, timedelta
 
 # Requires: netifaces, humanize
@@ -16,6 +17,7 @@ import netifaces
 import humanize
 
 deg = u'\xb0'
+cls = u'\x1b[2J\x1b[H'
 
 
 def cpu_temp() -> str:
@@ -41,10 +43,14 @@ def uptime() -> str:
         seconds_up = int(float(uptime.read().split(' ')[0]))
 
     if seconds_up:
-        return humanize.precisedelta(datetime.now()
-                                     - timedelta(seconds=seconds_up),
-                                     minimum_unit='minutes',
-                                     format='%d')
+        ret_str = humanize.precisedelta(datetime.now()
+                                        - timedelta(seconds=seconds_up),
+                                        minimum_unit='minutes',
+                                        format='%d')
+        return ret_str
+
+        # .replace("month", "mnt").replace("day","d")
+        # .replace("hour", "hr").replace("minute", "min")
     else:
         return "Could not get uptime"
 
@@ -63,7 +69,7 @@ def get_ips(ipv6=False) -> str:
         address_type = netifaces.AF_INET
     for intf in [i for i in phys_interfaces if i in interfaces]:
         addresses = netifaces.ifaddresses(intf)
-        ret_str += f'{intf}: {addresses[address_type][0]["addr"]}\n'
+        ret_str += f'{intf}:\n{addresses[address_type][0]["addr"]}\n'
 
     return ret_str.strip()
 
@@ -132,6 +138,17 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     js_config = get_config()
-    print(FUNCS[args.command]())
+    sys.stdout.write(cls)
+    cmd_output = FUNCS[args.command]()
+    cmd_lines = cmd_output.split('\n')
+    # The display is 16 characters wide on the 128x32 OLED
+    n = 16
+    out_str = ""
+    for part_str in [cmd_line[i:i+n] for cmd_line in cmd_lines for i in
+                     range(0, len(cmd_line), n)]:
+        out_str += part_str + '\n'
+
+    # Strip the last newline before writing the output
+    sys.stdout.write(out_str.strip())
 
 # vim: set wrap formatoptions+=t tw=80 noai ts=4 sw=4:

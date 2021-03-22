@@ -130,3 +130,10 @@ dmypy.json
 
 # Ignore compiled dtbo's
 *.dtbo
+
+# Debian package files that get auto generated
+debian/.debhelper/*
+debian/*.log
+debian/*.substvars
+debian/rockpi-sata/
+debian/files

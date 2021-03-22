@@ -1,0 +1,15 @@
+#!/bin/sh
+
+CONFIG=/boot/config.txt
+# TODO: This will need to modify the /boot/config.txt file
+# TODO: Loop over these and
+# dtparam=i2c1=on,i2c_baudrate=400000
+# gpio=17=op,dh
+# gpio=26=op,dh
+# gpio=25=op,dh
+# dtoverlay=pwm,pin=13,func=4
+# dtoverlay=pwm-fan
+# dtoverlay=ssd1306-overlay,width=128,height=32,inverted,sequential
+# dtoverlay=gpio-key,gpio=17,label="Top board",keycode=0x197
+
+# sed $CONFIG -i -e "s/^.*dtoverlay=gpio-fan.*/dtoverlay=gpio-fan,gpiopin=$GPIO,temp=$TEMP/"

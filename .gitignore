@@ -137,3 +137,6 @@ debian/*.log
 debian/*.substvars
 debian/rockpi-sata/
 debian/files
+
+# pwm-fan.c
+pwm-fan-*/pwm-fan.c

@@ -124,6 +124,9 @@ gpio=25=op,dh
 That sets the GPIOs as outputs and drives them high.
 Don't ask me why the 26 comes before the 25, if I didn't do it this way, the disks would come up in the wrong order (disk 3 as sda, disk 1 as sdc etc.) so it might be wrong in the documentation/wiki.
 
+# Build a Debian package
+If you want an installable package `dpkg-buildpackage -b --no-sign` will do that for you
+
 # What doesn't work?
 Well, this is just the early stages. There are no scripts to do the functionality
 that you can get from the Rockpi repository, but I am willing to accept PR's if

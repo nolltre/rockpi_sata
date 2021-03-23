@@ -485,4 +485,3 @@ MODULE_AUTHOR("Kamil Debski <k.debski@samsung.com>");
 MODULE_ALIAS("platform:pwm-fan");
 MODULE_DESCRIPTION("PWM FAN driver");
 MODULE_LICENSE("GPL");
-

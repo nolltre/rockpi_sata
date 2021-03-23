@@ -54,7 +54,7 @@ dtoverlay=pwm,pin=13,func=4
 ```
 
 I also add a custom overlay (`pwm-fan`) which you can find in the overlays folder.
-Do note that you will have to build the kernel module too, which I am doing by copying the `pwm-fan-1.0` directory to `/usr/src` and adding it to dkms with `dkms install pwm-fan/1.0` which will install the kernel module for you automatically with every kernel update (you'll need the `linux-headers` package too). The pwm-fan.c is copied from `https://github.com/raspberrypi/linux/blob/rpi-5.10.y/drivers/hwmon/pwm-fan.c`  
+Do note that you will have to build the kernel module too, which I am doing by copying the `pwm-fan-0.0.1` directory to `/usr/src` and adding it to dkms with `dkms install pwm-fan/0.0.1` which will install the kernel module for you automatically with every kernel update (you'll need the `linux-headers` package too). The pwm-fan.c is copied from `https://github.com/raspberrypi/linux/blob/rpi-5.10.y/drivers/hwmon/pwm-fan.c`  
 This should really be made into a script that does this automatically in a package.
 
 

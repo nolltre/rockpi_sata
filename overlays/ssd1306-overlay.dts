@@ -16,7 +16,6 @@
 	    ssd1306: oled@3c{
 		compatible = "solomon,ssd1306fb-i2c";
 		reg = <0x3c>;
-        reset-gpios = <&gpio 23 1>;
 		solomon,width = <128>;
 		solomon,height = <64>;
 		solomon,page-offset = <0>;
@@ -33,7 +32,8 @@
         sequential = <&ssd1306>,"solomon,com-seq?";
         remapped = <&ssd1306>,"solomon,com-lrremap?";
         inverted = <&ssd1306>,"solomon,com-invdir?";
-        reset-pin = <&ssd1306>,"reset-gpios:4";
+        reset-pin = <&ssd1306>,"reset-gpios:4",<&gpio 0 1>;
+        /* reset-pin = <&ssd1306>,"reset-gpios:4"; */
         reset-active-low = <&ssd1306>,"reset-active-low?";
     };
 };

@@ -8,6 +8,7 @@
 
 import argparse
 import json
+import glob
 import shutil
 import sys
 from datetime import datetime, timedelta
@@ -97,10 +98,11 @@ def fan_speed() -> str:
     """ Get the duty cycle of the cooling fan (in the top board) """
     # TODO: Find the hwmon entry that the pwmfan belongs to
     try:
-        with open("/sys/class/hwmon/hwmon2/pwm1") as sys_duty_cycle:
+        pwm_file = glob.glob("/sys/class/hwmon/hwmon?/pwm1")
+        with open(pwm_file[0]) as sys_duty_cycle:
             duty_cycle = int(int(sys_duty_cycle.read()) / 255 * 100)
 
-            return f'Cooling fan at {duty_cycle}%'
+            return f'Fan: {duty_cycle : >10}%'
     except Exception:
         return f'Cannot read duty cycle of fan'
 
@@ -141,6 +143,7 @@ if __name__ == '__main__':
     sys.stdout.write(cls)
     cmd_output = FUNCS[args.command]()
     cmd_lines = cmd_output.split('\n')
+
     # The display is 16 characters wide on the 128x32 OLED
     n = 16
     out_str = ""

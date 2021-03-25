@@ -31,7 +31,7 @@ def cpu_temp() -> str:
         temperature = temp_reading
 
     temp_str = f'{round(temperature / 1000.0, 1)}{deg}'
-    return f'CPU: {temp_str:>{WIDTH-7}}' \
+    return f'CPU: {temp_str:>{WIDTH-6}}' \
         f'{"F" if as_fahrenheit else "C"}'
 
 
@@ -101,7 +101,7 @@ def fan_speed() -> str:
         with open(pwm_file[0]) as sys_duty_cycle:
             duty_cycle = int(sys_duty_cycle.read()) / 255
 
-            return f'Fan: {duty_cycle:>10.0%}'
+            return f'Fan: {duty_cycle:>11.0%}'
     except Exception:
         return f'Cannot read duty cycle of fan'
 
@@ -110,7 +110,10 @@ def free_mem() -> str:
     with open("/proc/meminfo") as mem:
         mem_inf = mem.read().splitlines()
         mem_stats = dict(s.split(':') for s in mem_inf)
-    return str(int(mem_stats["MemTotal"].strip().split(' ')[0]) // 1024)
+    mem_total = int(mem_stats["MemTotal"].strip().split(' ')[0]) // 1024
+    mem_free = int(mem_stats["MemFree"].strip().split(' ')[0]) // 1024
+    ret_str = f"Mem: {f'{mem_free}/{mem_total}': >11}"
+    return ret_str
 
 
 def get_config(filename) -> dict:

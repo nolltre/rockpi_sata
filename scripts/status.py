@@ -11,11 +11,9 @@ import json
 import glob
 import shutil
 import sys
-from datetime import datetime, timedelta
 
-# Requires: netifaces, humanize
+# Requires: netifaces
 import netifaces
-import humanize
 
 deg = u'\xb0'
 cls = u'\x1b[2J\x1b[H'
@@ -32,26 +30,26 @@ def cpu_temp() -> str:
     else:
         temperature = temp_reading
 
-    return f'CPU: {round(temperature / 1000.0, 1)}{deg}' \
+    return f'CPU: {round(temperature / 1000.0, 1): >9}{deg}' \
         f'{"F" if as_fahrenheit else "C"}'
 
 
 def uptime() -> str:
     """ Get the time the system's been up. It reads from the /proc/uptime file
-    and takes the first argument (num seconds) and formats it into a human
-    readable format """
+    and takes the first argument (num seconds) and formats it into a readable
+    format similar to the uptime command"""
     with open('/proc/uptime') as uptime:
         seconds_up = int(float(uptime.read().split(' ')[0]))
 
     if seconds_up:
-        ret_str = humanize.precisedelta(datetime.now()
-                                        - timedelta(seconds=seconds_up),
-                                        minimum_unit='minutes',
-                                        format='%d')
+        days = seconds_up//86400
+        hours = (seconds_up - days * 86400)//3600
+        minutes = (seconds_up - days * 86400 - hours * 3600)//60
+        ret_str = 'Up:\n'
+        ret_str += (f'''{f"{days} day{'s' if days>1 else ''}": ^{WIDTH}}\n'''
+                    f'{f"{hours:02d}:{minutes:02d}": ^{WIDTH}}')
         return ret_str
 
-        # .replace("month", "mnt").replace("day","d")
-        # .replace("hour", "hr").replace("minute", "min")
     else:
         return "Could not get uptime"
 
@@ -89,20 +87,19 @@ def disk_free() -> str:
         # Empty means root
         if not mntpoint:
             mntpoint = "Root"
-        ret_str += f"{mntpoint}: {int(s.used/s.total*100)}% free\n"
+        ret_str += f"{mntpoint}: {s.used/s.total:.0%} free\n"
 
     return ret_str.strip()
 
 
 def fan_speed() -> str:
     """ Get the duty cycle of the cooling fan (in the top board) """
-    # TODO: Find the hwmon entry that the pwmfan belongs to
     try:
         pwm_file = glob.glob("/sys/class/hwmon/hwmon?/pwm1")
         with open(pwm_file[0]) as sys_duty_cycle:
-            duty_cycle = int(int(sys_duty_cycle.read()) / 255 * 100)
+            duty_cycle = int(sys_duty_cycle.read()) / 255
 
-            return f'Fan: {duty_cycle : >10}%'
+            return f'Fan: {duty_cycle:>10.0%}'
     except Exception:
         return f'Cannot read duty cycle of fan'
 
@@ -111,11 +108,11 @@ def free_mem() -> str:
     with open("/proc/meminfo") as mem:
         mem_inf = mem.read().splitlines()
         mem_stats = dict(s.split(':') for s in mem_inf)
-    return str(int(int(mem_stats["MemTotal"].strip().split(' ')[0]) / 1024))
+    return str(int(mem_stats["MemTotal"].strip().split(' ')[0]) // 1024)
 
 
-def get_config() -> dict:
-    with open("config.json") as json_data_file:
+def get_config(filename) -> dict:
+    with open(filename) as json_data_file:
         return json.load(json_data_file)
 
 
@@ -137,18 +134,24 @@ if __name__ == '__main__':
                         + ' '.join([k for k in FUNCS.keys()])
                         + ')',
                         metavar='COMMAND')
+    parser.add_argument('--config', default='config.json',
+                        help='Define a different configuration file, '
+                        'default: %(default)s')
+    parser.add_argument('--width', default=16,
+                        help='Override the width of the display, default: '
+                        '%(default)d')
 
     args = parser.parse_args()
-    js_config = get_config()
+    js_config = get_config(args.config)
     sys.stdout.write(cls)
+    WIDTH = args.width
     cmd_output = FUNCS[args.command]()
     cmd_lines = cmd_output.split('\n')
 
     # The display is 16 characters wide on the 128x32 OLED
-    n = 16
     out_str = ""
-    for part_str in [cmd_line[i:i+n] for cmd_line in cmd_lines for i in
-                     range(0, len(cmd_line), n)]:
+    for part_str in [cmd_line[i:i+WIDTH] for cmd_line in cmd_lines for i in
+                     range(0, len(cmd_line), WIDTH)]:
         out_str += part_str + '\n'
 
     # Strip the last newline before writing the output

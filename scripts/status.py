@@ -30,7 +30,8 @@ def cpu_temp() -> str:
     else:
         temperature = temp_reading
 
-    return f'CPU: {round(temperature / 1000.0, 1): >9}{deg}' \
+    temp_str = f'{round(temperature / 1000.0, 1)}{deg}'
+    return f'CPU: {temp_str:>{WIDTH-7}}' \
         f'{"F" if as_fahrenheit else "C"}'
 
 
@@ -87,7 +88,8 @@ def disk_free() -> str:
         # Empty means root
         if not mntpoint:
             mntpoint = "Root"
-        ret_str += f"{mntpoint}: {s.used/s.total:.0%} free\n"
+        ret_str += (f"{mntpoint}: {s.used/s.total:>{WIDTH-len(mntpoint)-3}.0%}"
+                    "\n")
 
     return ret_str.strip()
 
@@ -133,19 +135,27 @@ if __name__ == '__main__':
                         help='The command to run ('
                         + ' '.join([k for k in FUNCS.keys()])
                         + ')',
+                        nargs='+',
                         metavar='COMMAND')
     parser.add_argument('--config', default='config.json',
                         help='Define a different configuration file, '
                         'default: %(default)s')
+    parser.add_argument('--clear', default=False,
+                        action='store_true',
+                        help='If specified, the screen will be cleared before'
+                        'the output is printed')
     parser.add_argument('--width', default=16,
                         help='Override the width of the display, default: '
                         '%(default)d')
 
     args = parser.parse_args()
     js_config = get_config(args.config)
-    sys.stdout.write(cls)
+    if args.clear:
+        sys.stdout.write(cls)
     WIDTH = args.width
-    cmd_output = FUNCS[args.command]()
+    cmd_output = ""
+    for cmd in args.command:
+        cmd_output += FUNCS[cmd]() + '\n'
     cmd_lines = cmd_output.split('\n')
 
     # The display is 16 characters wide on the 128x32 OLED

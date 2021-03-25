@@ -6,7 +6,7 @@ Build-Depends: build-essential, debhelper (>= 10), device-tree-compiler
 
 Package: rockpi-sata
 Architecture: armhf
-Depends: ${misc:Depends}, python3, python3-humanize, python3-netifaces, dkms, linux-headers, build-essential
+Depends: ${misc:Depends}, python3, python3-netifaces, dkms, linux-headers, build-essential
 Homepage: https://github.com/nolltre/rockpi_sata
 Description: Dan's Rockpi SATA support package
  This package adds a service for the Rockpi Quad SATA

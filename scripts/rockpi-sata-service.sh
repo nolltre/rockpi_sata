@@ -1,24 +1,41 @@
 #!/bin/bash
+set -u
 
-# TODO: These are the commands to run, and on which terminal
-REFRESH=5
+REFRESH=${REFRESH:-5}
 CONFIG=${CONFIG:-"config.json"}
+START_VT=10
+SCREENS=(
+    "cpu_temp fan_speed free_mem"
+    "uptime"
+    "disk_free"
+    "get_ips"
+)
+NUM_VTS=${#SCREENS[@]}
 
-openvt -f -c 10 -- watch -n $REFRESH -t ./status.py --config "${CONFIG}" cpu_temp fan_speed free_mem
-openvt -f -c 11 -- watch -n $REFRESH -t ./status.py --config "${CONFIG}" uptime
-openvt -f -c 12 -- watch -n $REFRESH -t ./status.py --config "${CONFIG}" disk_free
-openvt -f -c 13 -- watch -n $REFRESH -t ./status.py --config "${CONFIG}" get_ips
-# openvt 16 -- /opt/rockpi-sata/status.py get_ipv6s
+function cleanup() {
+    # Kill anything started on any TTY we're using
+    for ((i = $START_VT; i < $START_VT+$NUM_VTS; i++)); do
+        echo Killing processes on tty$i
+        pkill -t tty$i
+        clear > /dev/tty$i
+        deallocvt $i
+    done
+}
+
+trap cleanup EXIT
+
+for ((i = 0; i < $NUM_VTS; i++)); do
+    openvt -f -c $((START_VT+i)) -- watch -n $REFRESH -t ./status.py --config "${CONFIG}" ${SCREENS[$i]}
+done
 
 # TODO: Main script responsible for switching virtual terminals
 #/opt/rockpi-sata/read_button.py
 
-# TODO: Kill the watch processes (i.e. save the pids and kill them in a trap)
-START_VT=10
-NUM_VTS=4
+# Loop indefinely and change terminals every $REFRESH seconds
 while true; do
     i=$START_VT
     until [ $i -eq $(($START_VT+$NUM_VTS)) ]; do
+        echo Changing to VT $i
         chvt $i
         sleep $REFRESH
         ((i=$i+1))

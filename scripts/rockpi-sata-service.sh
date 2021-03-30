@@ -1,14 +1,43 @@
-#!/bin/sh
+#!/bin/bash
+set -u
 
-# TODO: These are the commands to run, and on which terminal
+REFRESH=${REFRESH:-5}
+CONFIG=${CONFIG:-"config.json"}
+START_VT=10
+SCREENS=(
+    "cpu_temp fan_speed free_mem"
+    "uptime"
+    "disk_free"
+    "get_ips"
+)
+NUM_VTS=${#SCREENS[@]}
 
-openvt 10 -- /opt/rockpi-sata/status.py cpu_temp
-openvt 11 -- /opt/rockpi-sata/status.py fan_speed
-openvt 12 -- /opt/rockpi-sata/status.py free_mem
-openvt 13 -- /opt/rockpi-sata/status.py uptime
-openvt 14 -- /opt/rockpi-sata/status.py disk_free
-openvt 15 -- /opt/rockpi-sata/status.py get_ips
-# openvt 16 -- /opt/rockpi-sata/status.py get_ipv6s
+function cleanup() {
+    # Kill anything started on any TTY we're using
+    for ((i = $START_VT; i < $START_VT+$NUM_VTS; i++)); do
+        echo Killing processes on tty$i
+        pkill -t tty$i
+        clear > /dev/tty$i
+        deallocvt $i
+    done
+}
+
+trap cleanup EXIT
+
+for ((i = 0; i < $NUM_VTS; i++)); do
+    openvt -f -c $((START_VT+i)) -- watch -n $REFRESH -t ./status.py --config "${CONFIG}" ${SCREENS[$i]}
+done
 
 # TODO: Main script responsible for switching virtual terminals
-/opt/rockpi-sata/read_button.py
+#/opt/rockpi-sata/read_button.py
+
+# Loop indefinely and change terminals every $REFRESH seconds
+while true; do
+    i=$START_VT
+    until [ $i -eq $(($START_VT+$NUM_VTS)) ]; do
+        echo Changing to VT $i
+        chvt $i
+        sleep $REFRESH
+        ((i=$i+1))
+    done
+done

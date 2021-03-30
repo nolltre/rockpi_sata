@@ -1,25 +1,27 @@
-#!/bin/bash
+#!/bin/sh -ex
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
 CONFIG=/boot/config.txt
-# Grep for the strings we need to add to the config file,
-# add after [pi4]
-LINES=(
-    "dtparam=i2c1=on,i2c_baudrate=400000"
-    "gpio=17=op,dh"
-    "gpio=26=op,dh"
-    "gpio=25=op,dh"
-    "dtoverlay=pwm,pin=13,func=4"
-    "dtoverlay=pwm-fan"
-    "dtoverlay=ssd1306-overlay,width=128,height=32,inverted,sequential"
-    'dtoverlay=gpio-key,gpio=17,label="Top board",keycode=0x197'
-)
+ 
+db_get rockpi-sata/configure_boot_config
+if [ "$RET" = "true" ]; then
+    db_get rockpi-sata/boot_config_section
+    SECTION="$RET"
+    # Grep for the strings we need to add to the config file,
+    # add after [${SECTION}] or any other section specified by the user
+    LINES="dtparam=i2c1=on,i2c_baudrate=400000 gpio=17=op,dh gpio=26=op,dh gpio=25=op,dh dtoverlay=pwm,pin=13,func=4 dtoverlay=pwm-fan dtoverlay=ssd1306-overlay,width=128,height=32,inverted,sequential dtoverlay=gpio-key,gpio=17,label='Topboard',keycode=0x197"
 
-IFS=""
-ADD_LINES=""
-for LINE in ${LINES[@]}; do
-    sed -n '/^\[pi4\]/,/^\[.*/p' "${CONFIG}" | grep -q "${LINE}" \
-        || ADD_LINES+="$LINE\n"
-done
-#IFS=$O_IFS
+    ADD_LINES=""
+    for LINE in ${LINES}; do
+        sed -n "/^\[${SECTION}\]/,/^\[.*/p" "${CONFIG}" | grep -q "${LINE}" \
+            || ADD_LINES="${ADD_LINES}${LINE}\n"
+    done
 
-# Add the lines that are missing to the [pi4] section
-sed -i "/^\[pi4\]/a ${ADD_LINES}" "${CONFIG}"
+    db_get rockpi-sata/boot_config
+    # Add the lines that are missing to the [${SECTION}] section
+    if [ "$RET" = "true" ]; then
+        sed -i "/^\[${SECTION}\]/a ${ADD_LINES}" "${CONFIG}"
+    fi
+fi

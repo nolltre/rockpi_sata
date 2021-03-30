@@ -1,0 +1,37 @@
+Template: rockpi-sata/configure_boot_config
+Type: boolean
+Default: false
+Description: Do you want to configure /boot/config.txt?
+
+Template: rockpi-sata/boot_config_section
+Type: string
+Default: pi4
+Description: Which section should the configuration options be added to?
+
+Template: rockpi-sata/boot_config
+Type: string
+Description: Add these lines to the config.txt
+ .
+ These are the options that will be added to the config.txt. Only proceed if
+ you are happy with them.
+ .
+ Current options:
+ .
+ ${ADD_LINES}
+
+Template: rockpi-sata/add_cmdline_fb
+Type: boolean
+Description: Do you want to add kernel command line parameters for framebuffer?
+ .
+ If true, there will be additional options added to the kernel command line
+ enabling the framebuffer driver for the OLED display connected to the top board
+ of the Rockpi SATA HAT
+
+Template: rockpi-sata/cmdline_fb
+Type: string
+Description: This will be your new command line, edit if needed.
+ Your current command line contains:
+ .
+ ${CMDLINE}
+ .
+ It will be replace with the below, is that ok?

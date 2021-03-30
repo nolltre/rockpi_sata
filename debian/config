@@ -1,0 +1,45 @@
+#!/bin/sh -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+CONFIG=/boot/config.txt
+
+# We need multiline capabilities
+db_capb escape
+
+db_title "Configure Rockpi SATA"
+db_input high rockpi-sata/configure_boot_config || true
+db_go || true
+
+db_get rockpi-sata/configure_boot_config
+if [ "$RET" = "true" ]; then
+    db_input low rockpi-sata/boot_config_section || true
+    db_go || true
+    db_get rockpi-sata/boot_config_section
+    SECTION="$RET"
+    # Grep for the strings we need to add to the config file,
+    # add after [${SECTION}] or any other section specified by the user
+    LINES="dtparam=i2c1=on,i2c_baudrate=400000 gpio=17=op,dh gpio=26=op,dh gpio=25=op,dh dtoverlay=pwm,pin=13,func=4 dtoverlay=pwm-fan dtoverlay=ssd1306-overlay,width=128,height=32,inverted,sequential dtoverlay=gpio-key,gpio=17,label='Topboard',keycode=0x197"
+
+    ADD_LINES=""
+    for LINE in ${LINES}; do
+        sed -n "/^\[${SECTION}\]/,/^\[.*/p" "${CONFIG}" | grep -q "${LINE}" \
+            || ADD_LINES="${ADD_LINES}${LINE}\n"
+    done
+
+    db_input medium rockpi-sata/boot_config || true
+    db_subst rockpi-sata/boot_config ADD_LINES "${ADD_LINES}"
+    db_go || true
+fi
+
+# Only ask if the framebuffer parameters are missing,
+# TODO: This could be cleaned up
+ADD_FB_PARAMS="fbcon=font:MINI4x6 fbcon=rotate:2 fbcon=logo-count:0 vt.global_cursor_default=0"
+CMDLINE=/boot/cmdline.txt
+if ! grep -q "${ADD_FB_PARAMS}" ${CMDLINE}; then
+    db_input low rockpi-sata/cmdline_fb || true
+    db_subst rockpi-sata/cmdline_fb CMDLINE "$(cat ${CMDLINE})"
+    db_set rockpi-sata/cmdline_fb "$(cat ${CMDLINE}) ${ADD_FB_PARAMS}"
+    db_go || true
+fi

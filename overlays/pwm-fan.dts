@@ -8,7 +8,7 @@
 	fragment@0 {
 		target-path = "/";
 		__overlay__ {
-			fan0: pwm-fan {
+			fan0: pwm-fan0 {
 				compatible = "pwm-fan";
 				cooling-min-state = <0>;
 				cooling-max-state = <4>;
@@ -16,8 +16,20 @@
                 // Rockpi standard 25% 50% 75% 100%
                 // Percent of 0-255
 				cooling-levels = <0 64 128 191 255>;
-                // PWM signal connected to PWM1
+                // PWM signal connected to PWM1 (top board fan)
 				pwms = <&pwm 1 25000 0>;
+				status = "okay";
+			};
+			fan1: pwm-fan1 {
+				compatible = "pwm-fan";
+				cooling-min-state = <0>;
+				cooling-max-state = <4>;
+				#cooling-cells = <2>;
+                // Rockpi standard 25% 50% 75% 100%
+                // Percent of 0-255
+				cooling-levels = <0 64 128 191 255>;
+                // PWM signal connected to PWM0 (CPU cooler)
+				pwms = <&pwm 0 25000 0>;
 				status = "okay";
 			};
 		};
@@ -49,6 +61,7 @@
 				};
 			};
 			cooling-maps {
+				// Top board
 				map0 {
 					trip = <&trip0>;
 					cooling-device = <&fan0 0 1>;
@@ -64,6 +77,23 @@
 				map3 {
 					trip = <&trip3>;
 					cooling-device = <&fan0 3 4>;
+				};
+				// CPU
+				map4 {
+					trip = <&trip0>;
+					cooling-device = <&fan1 0 1>;
+				};
+				map5 {
+					trip = <&trip1>;
+					cooling-device = <&fan1 1 2>;
+				};
+				map6 {
+					trip = <&trip2>;
+					cooling-device = <&fan1 2 3>;
+				};
+				map7 {
+					trip = <&trip3>;
+					cooling-device = <&fan1 3 4>;
 				};
 			};
 		};
